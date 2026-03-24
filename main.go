@@ -7,55 +7,72 @@ import (
 )
 
 func main() {
+	// Validate The os.Args input
+	if len(os.Args) < 2 || len(os.Args) > 3 {
+		fmt.Println("Usage: go run . [string]\n	OR")
+		fmt.Println("Usage: go run . [string] standard/thinkertoy/shadow")
 
-	// Check if the user passed exactly one argument
-	if len(os.Args) != 2 {
-		fmt.Println("usage : go run . \"text\"")
-		return
+		os.Exit(1)
 	}
 
-	// Store the user input from the command line
+	// Get Input
 	input := os.Args[1]
 
-	// Read the ASCII banner file ("standard.txt")
-	data, err := os.ReadFile("standard.txt")
-	if err != nil {
-		fmt.Println("Error Reading file", err)
+	bannerName := "standard"
+	if len(os.Args) == 3 {
+		bannerName = os.Args[2]
 	}
 
-	// Convert the file content into line. Each line represents part of the ASCII characters
-	line := strings.Split(string(data), "\n")
+	validBanner := map[string]bool{
+		"standard":   true,
+		"thinkertoy": true,
+		"shadow":     true,
+	}
 
-	// Call the function that converts the text into ASCII art
-	result := printASCII(input, line)
-	// Print the final ASCII result to the terminal 
-	fmt.Print(result)
+	if !validBanner[bannerName] {
+		fmt.Printf("the banner you gave %q is not a among valid banners standard/thinkertoy/shadow \n", bannerName)
+		os.Exit(1)
+	}
+
+	//SplitInput
+	lines := splitInput(input)
+
+	//loadBanner
+	banner := loadBanner(bannerName + ".txt")
+
+	//printArt
+	printArt(lines, banner)
 
 }
 
-func printASCII(input string, line []string) string {
-	if strings.ReplaceAll(input, "\\n", "") == "" {
-		count := len(input) / 2
-		return strings.Repeat("\n", count)
+func loadBanner(filename string) []string {
+	texts, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Println("Error: Error reading file", err)
+		return nil
 	}
+	result := strings.Split(string(texts), "\n")
+	return result
+}
 
-	var output strings.Builder
-	userInput := strings.Split(input, "\\n")
+func splitInput(text string) []string {
+	texts := strings.Split(text, "\\n")
+	return texts
+}
 
-	for _, word := range userInput {
-		if word != "" {
-			for row := 0; row < 8; row++ {
-				for _, char := range word {
-					index := (int(char)-32)*9 + 1 + row
-					output.WriteString(line[index])
-				}
+func printArt(lines []string, banner []string) {
+	for _, line := range lines {
+		if line == "" {
+			fmt.Println()
+			continue
+		}
+		for row := 0; row < 9; row++ {
+			for _, ch := range line {
+				ascii := int(ch)
+				fmt.Print(banner[(ascii-32)*9+row])
 
-				output.WriteString("\n")
 			}
-		} else {
-			output.WriteString("\n")
+			fmt.Println()
 		}
 	}
-
-	return output.String()
 }
